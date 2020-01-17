@@ -45,7 +45,7 @@ const contents = files.reduce((O, F) => {
 
   const M = content.movie.match(/(\d\d\d\d)_(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)/)
 	if (M) {
-	  content.time = new Date(`${M[2]} ${M[3]} ${M[1]} ${M[4]}:${M[5]}:${M[6]} ${TimeZone}`).getTime() / 1000
+	  content.time = new Date(`${M[2]} ${M[3]} ${M[1]} ${M[4]}:${M[5]}:${M[6]} ${TimeZone}`).getTime() / 1000 + process.env.TIMEDIFF * 1
   } else {
 		const serial = content.movie.match(/G.(..)(.+)/)[1]
 		content.order = (serial === 'PR') ? 0 : Number(serial)
