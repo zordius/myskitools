@@ -5,6 +5,7 @@ const { execSync } = require('child_process')
 const VIRBDIR = `/Users/${process.env.USER}/Library/Application Support/Garmin/VIRB Edit/Database/4/RawMovies`
 const dirs = fs.readdirSync(VIRBDIR).filter(D => D.match(/localized/))
 const files = dirs.map(D => `${VIRBDIR}/${D}/movie.plist`)
+const STARTT = process.env.STARTT
 
 const TimeZone = 'GMT+0900'
 const currentFiles = fs.readdirSync('.').filter(D => D.match(/MP4/)).reduce((O, F) => ({
@@ -45,13 +46,16 @@ const contents = files.reduce((O, F) => {
 
   const M = content.movie.match(/(\d\d\d\d)_(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)/)
 	if (M) {
-	  content.time = new Date(`${M[2]} ${M[3]} ${M[1]} ${M[4]}:${M[5]}:${M[6]} ${TimeZone}`).getTime() / 1000 + process.env.TIMEDIFF * 1
+    console.log('Time matched from file name!')
+	  content.time = new Date(`${M[2]} ${M[3]} ${M[1]} ${M[4]}:${M[5]}:${M[6]} ${TimeZone}`).getTime() / 1000 + (process.env.TIMEDIFF || 0) * 1
   } else {
 		const serial = content.movie.match(/G.(..)(.+)/)[1]
 		content.order = (serial === 'PR') ? 0 : Number(serial)
     if (content.order === 0) {
       const MM = execSync(`exiftool -MediaCreateDate ${content.movie}.MP4`).toString().match(/(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/)
-      content.time = new Date(`${MM[2]} ${MM[3]} ${MM[1]} ${MM[4]}:${MM[5]}:${MM[6]} ${TimeZone}`).getTime() / 1000
+      if (MM[1] >= 2020) {
+        content.time = new Date(`${MM[2]} ${MM[3]} ${MM[1]} ${MM[4]}:${MM[5]}:${MM[6]} ${TimeZone}`).getTime() / 1000
+      }
     }
   }
 
@@ -59,7 +63,7 @@ const contents = files.reduce((O, F) => {
   return O
 }, [])
 
-let startTime = 0
+let startTime = process.env.STARTT * 1
 contents.sort((A, B) => A.order - B.order).forEach(content => {
   if (!content.time) {
     content.time = startTime
